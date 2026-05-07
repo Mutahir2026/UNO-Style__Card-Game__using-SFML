@@ -9,7 +9,7 @@
 //
 //  Files needed in the same folder as this file:
 //    - UNO_Game_v5.h   (your backend header)
-//    - arial.ttf        (copy from C:/Windows/Fonts/arial.ttf)
+//    - arial.ttf        (copy from C:/Windows/Fonts/arial.ttf)     // STILL FONT ISSUE PERSISTS
 // ============================================================
 
 #include <SFML/Graphics.hpp>
@@ -26,7 +26,7 @@ const unsigned WIN_H = 680;
 // ============================================================
 //  SCREEN STATE
 // ============================================================
-enum class Screen { MENU, RULES, GAME };
+enum class Screen { MENU, RULES, GAME };        // Automatic UNO! Screen TO BE ADDED
 
 // ============================================================
 //  CARD COLOUR -> sf::Color
@@ -201,6 +201,7 @@ int main()
                 // Colour picker after Wild
                 if (phase == TurnPhase::CHOOSE_COLOR)
                 {
+                    // Need to Penalize a user for picking a colour they don't have in their hand
                     Color cols[4] = { Color::RED, Color::BLUE,
                                       Color::GREEN, Color::YELLOW };
                     float cx = 330.f, cy = 265.f,
@@ -211,8 +212,9 @@ int main()
                                 .contains(mouse))
                         {
                             gm->setChosenColor(cols[i]);
-                            if (!gm->hasCardsOfColor(cols[i]))
-                                gm->skipWildFollowUp();
+                            if (!gm->hasCardsOfColor(cols[i]))  // No matching colour cards
+                                gm->advanceTurn();  // Skip the "follow-up" phase and move to next player
+                                // skipWildFollowUp();  // Skip the "follow-up" phase and move to next player, without advancing turn (since they still get to play cards of the chosen colour)
                             break;
                         }
                     }
@@ -259,36 +261,37 @@ int main()
         // ========================================================
         //  DRAW
         // ========================================================
-        window.clear(sf::Color(18, 18, 38));
+           window.clear(sf::Color(54,69,79)); // slate grey background
 
         // ---- MENU SCREEN ----------------------------------------
         if (screen == Screen::MENU)
         {
-            // Panel
+            // Panel // increase size alot more and add dark purple outline, and to be made centred within window
             sf::RectangleShape panel({ 520.f, 340.f });
             panel.setPosition({ 290.f, 160.f });
-            panel.setFillColor(sf::Color(28, 28, 68));
+            panel.setFillColor(sf::Color(22, 52, 22));
+            // panel.setOutlineColor(sf::Color(110, 110, 210));
             panel.setOutlineColor(sf::Color(110, 110, 210));
             panel.setOutlineThickness(3.f);
             window.draw(panel);
 
             // Heading
-            sf::Text heading(font, "CARD GAME ARENA", 36);
-            heading.setFillColor(sf::Color(190, 190, 255));
+            sf::Text heading(font, "CARD MANIA", 48);
+            heading.setFillColor(sf::Color::Red);
             heading.setStyle(sf::Text::Bold);
             sf::FloatRect hb = heading.getLocalBounds();
             heading.setOrigin({ hb.size.x / 2.f, 0.f });
-            heading.setPosition({ float(WIN_W) / 2.f, 178.f });
+            heading.setPosition({ float(WIN_W) / 2.f, 178.f }); // MADE CENTRED WITHIN PANEL, NOT WINDOW
             window.draw(heading);
 
-            sf::Text tag(font, "Ready to Dive in?", 18);
+            sf::Text tag(font, "Ready to Dive in?", 24);
             tag.setFillColor(sf::Color(160, 160, 220));
             sf::FloatRect tb = tag.getLocalBounds();
             tag.setOrigin({ tb.size.x / 2.f, 0.f });
-            tag.setPosition({ float(WIN_W) / 2.f, 228.f });
+            tag.setPosition({ float(WIN_W) / 2.f, 228.f }); // MADE CENTRED WITHIN PANEL, NOT WINDOW
             window.draw(tag);
 
-            // Three buttons — x/y/w/h MUST match the hit-rects above
+            // Three buttons — x/y/w/h MUST match the hit-rects above   // TO BE enhanced accordingly
             drawButton(window, font, "Start Game",
                        350, 270, 300, 52, sf::Color(60, 60, 140));
             drawButton(window, font, "Rules",
@@ -315,7 +318,7 @@ int main()
             title.setPosition({ float(WIN_W) / 2.f, 90.f });
             window.draw(title);
 
-            const char* rules[] = {
+            const char* rules[] = {                     // TO BE UPDATED EXPLICITLY WITH DELIBRATE HOUSE RULES
                 "1.  Each player starts with 7 cards.",
                 "2.  Match the top card by COLOR or NUMBER.",
                 "3.  SKIP        : Next player loses their turn.",
@@ -401,8 +404,8 @@ int main()
             // Green felt background
             sf::RectangleShape felt({ float(WIN_W) - 80.f, float(WIN_H) - 60.f });
             felt.setPosition({ 40.f, 30.f });
-            felt.setFillColor(sf::Color(22, 50, 22));
-            felt.setOutlineColor(sf::Color(70, 130, 70));
+            felt.setFillColor(sf::Color(128,0,0));
+            felt.setOutlineColor(sf::Color::Yellow);
             felt.setOutlineThickness(3.f);
             window.draw(felt);
 

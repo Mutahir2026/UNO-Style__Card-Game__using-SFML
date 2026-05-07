@@ -100,6 +100,37 @@ Card* UnoDeck::GenerateOneCard()
     if (!seeded) { srand((unsigned)time(nullptr)); seeded = true; }
     int id = rand() % 56 + 1;
 
+    // the if statements can be replaced with arithmetic, like this and it was seemingly working, but i guess not quite right since the distribution was slightly off
+    // int colorId = (id - 1) / 10;
+    // int valueId = (id - 1) % 10;
+    // int typeId  = (id <= 40) ? 0 : (valueId < 4) ? valueId / 2 + 1 : valueId - 3;
+
+    // if (typeId == 0)  // Normal card
+    // {
+    //     Color c = (colorId == 0) ? Color::BLUE :
+    //               (colorId == 1) ? Color::GREEN :
+    //               (colorId == 2) ? Color::YELLOW :
+    //                                Color::RED;
+    //     return new NormalCard(c, valueId);
+    // }
+    // else  // Special card
+    // {
+    //     if (typeId == 4)  // Wild or WD4
+    //         return new SpecialCard(Color::WILD,
+    //                                (valueId < 2) ? CardType::WILD : CardType::WILD_DRAW_FOUR);
+    //     else
+    //     {
+    //         Color c = (colorId == 0) ? Color::BLUE :
+    //                   (colorId == 1) ? Color::GREEN :
+    //                   (colorId == 2) ? Color::YELLOW :
+    //                                    Color::RED;
+    //         CardType t = (typeId == 1) ? CardType::SKIP :
+    //                       (typeId == 2) ? CardType::REVERSE :
+    //                                        CardType::DRAW_TWO;
+    //         return new SpecialCard(c, t);
+    //     }
+    // }
+    
     // BLUE 0-9  (id 1-10)
     if (id == 1)  return new NormalCard(Color::BLUE, 0);
     if (id == 2)  return new NormalCard(Color::BLUE, 1);
@@ -185,16 +216,16 @@ vector<Card*> UnoDeck::GenerateCards(int count)
 //  PLAYER  — UNCHANGED
 // ============================================================
 
-Player::Player(const string& name) : name(name), saidUno(false) {}
+Player::Player(const string& name) : name(name) {}
 
 Player::~Player() { for (Card* c : hand) delete c; }
 
 string               Player::getName()     const { return name;             }
-bool                 Player::getSaidUno()  const { return saidUno;          }
+// bool                 Player::getSaidUno()  const { return saidUno;          }
 int                  Player::getHandSize() const { return (int)hand.size(); }
 const vector<Card*>& Player::getHand()     const { return hand;             }
 
-void Player::setSaidUno(bool val) { saidUno = val; }
+// void Player::setSaidUno(bool val) { saidUno = val; }
 void Player::addCard(Card* card)  { if (card) hand.push_back(card); }
 
 // Remove exact pointer from hand (does NOT delete — caller owns it)
@@ -203,7 +234,7 @@ void Player::removeCard(Card* card)
     for (int i = 0; i < (int)hand.size(); i++) {
         if (hand[i] == card) {
             hand.erase(hand.begin() + i);
-            if ((int)hand.size() != 1) saidUno = false;
+            // if ((int)hand.size() != 1) saidUno = false;
             return;
         }
     }
@@ -304,7 +335,7 @@ GameManager::~GameManager()
 void GameManager::addPlayer(Player* p) { players.push_back(p); }
 
 // Deal 7 cards each (official UNO rule), pick a non-Wild start card
-void GameManager::startGame()
+void GameManager::startGame()   // differs from resetGame() — startGame() just sets up the initial state, while resetGame() also clears the old state and creates new players with default names
 {
     for (Player* p : players) {
         vector<Card*> dealt = UnoDeck::GenerateCards(7);  // 7 cards (fixed from 10)
@@ -324,7 +355,8 @@ void GameManager::startGame()
 }
 
 // Clear everything and start a fresh game (called by "New Game" button)
-void GameManager::resetGame()
+// specially handy for new game after a game over without having to restart the whole program
+void GameManager::resetGame()   
 {
     delete topCard;
     topCard = nullptr;
@@ -334,8 +366,8 @@ void GameManager::resetGame()
     winner        = nullptr;
     lastDrawnCard = nullptr;
 
-    players.push_back(new Player("David"));
-    players.push_back(new Player("Sarah"));
+    players.push_back(new Player("Tom"));
+    players.push_back(new Player("Jerry"));
     startGame();
 }
 
@@ -359,7 +391,8 @@ Card*     GameManager::getLastDrawnCard()    const { return lastDrawnCard;    }
 bool      GameManager::isGameOver()          const { return phase == TurnPhase::GAME_OVER; }
 Player*   GameManager::getWinner()           const { return winner;           }
 
-bool GameManager::hasCardsOfColor(Color c) const
+// Helper for GUI: checks if current player has any cards of the given colour (used to skip Wild follow-up if none exist)
+bool GameManager::hasCardsOfColor(Color c) const    
 {
     for (const Card* card : players[currentPlayerIdx]->getHand())
         if (card->getColor() == c) return true;
@@ -388,7 +421,7 @@ bool GameManager::isPlayable(const Card* card) const
 // ============================================================
 
 // Play a card from hand by index
-bool GameManager::tryPlayCard(int handIndex)
+bool GameManager::tryPlayCard(int handIndex)  // differs from internalPlayCard() — checks playability and win condition, advances turn
 {
     if (phase != TurnPhase::CHOOSE_ACTION) return false;
 
@@ -408,7 +441,7 @@ bool GameManager::tryPlayCard(int handIndex)
 }
 
 // Draw one card; if playable → AWAITING_DRAW_DECISION, else auto-pass
-void GameManager::drawCard()
+void GameManager::drawCard()    // could have also jsut used if-else instead of seperate playDrawnCard() and keepDrawnCard() functions.
 {
     if (phase != TurnPhase::CHOOSE_ACTION) return;
 
@@ -478,10 +511,10 @@ bool GameManager::tryPlayWildFollowUp(int handIndex)
     return true;
 }
 
-// No matching colour cards exist — just end the turn
-void GameManager::skipWildFollowUp()
-{
-    if (phase != TurnPhase::PLAY_WILD_CARD) return;
-    phase = TurnPhase::CHOOSE_ACTION;
-    advanceTurn();
-}
+// // No matching colour cards exist — just end the turn
+// void GameManager::skipWildFollowUp() // No need for a whole extra function for this — can just call advanceTurn() directly from main after setting phase back to CHOOSE_ACTION
+// {
+//     if (phase != TurnPhase::PLAY_WILD_CARD) return;
+//     phase = TurnPhase::CHOOSE_ACTION;
+//     advanceTurn();
+// }

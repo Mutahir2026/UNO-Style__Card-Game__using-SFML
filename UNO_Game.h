@@ -1,5 +1,5 @@
 // ============================================================
-//  UNO_Game_v5.h  —  Complete Game Backend (GUI-ready)
+//  UNO_Game.h  —  Complete Game Backend (GUI-ready)
 //
 //  Changes from the original console version (UNO_Game_v5.cpp):
 //    1. Removed #include <iostream> and ALL cout/cin statements
@@ -15,7 +15,7 @@
 //
 //  Companion file: UNO_Game.cpp  (all definitions + full comments)
 // ============================================================
-#pragma once
+#pragma once    // Include guard -- ensures this header is only included once per compilation unit -- avoids redefinition errors
 
 #include <string>
 #include <vector>
@@ -37,7 +37,7 @@ enum class TurnPhase
     CHOOSE_ACTION,          // Normal: pick a card to play, or draw
     AWAITING_DRAW_DECISION, // Just drew — choose to play it or keep it
     CHOOSE_COLOR,           // Wild/WD4 played — must pick a colour
-    PLAY_WILD_CARD,         // Colour chosen — must play a card of that colour
+    PLAY_WILD_CARD,         // Colour chosen — must play a "follow-up" card of that colour
     GAME_OVER               // A player emptied their hand
 };
 
@@ -119,18 +119,18 @@ class Player
 {
     string        name;
     vector<Card*> hand;
-    bool          saidUno;
+    // bool          saidUno;  // REMOVED --- commented out
 
 public:
     Player(const string& name);
     ~Player();
 
     string               getName()     const;
-    bool                 getSaidUno()  const;
+    // bool                 getSaidUno()  const;
     int                  getHandSize() const;
     const vector<Card*>& getHand()     const;
 
-    void setSaidUno(bool val);
+    // void setSaidUno(bool val);
     void addCard(Card* card);
     void removeCard(Card* card);   // removes exact pointer; does NOT delete
 };
@@ -150,8 +150,8 @@ class GameManager
 
     // GUI state-machine variables
     TurnPhase phase            = TurnPhase::CHOOSE_ACTION;
-    Color     pendingWildColor = Color::RED;
-    Card*     lastDrawnCard    = nullptr;
+    Color     pendingWildColor = Color::RED;    // Only used during CHOOSE_WILD_CARD phase, set by GUI colour picker
+    Card*     lastDrawnCard    = nullptr;   // Only used during AWAITING_DRAW_DECISION phase, holds the card just drawn from the deck
     Player*   winner           = nullptr;
 
     GameManager();
