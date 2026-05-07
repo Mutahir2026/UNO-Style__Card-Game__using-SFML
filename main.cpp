@@ -13,7 +13,7 @@
 // ============================================================
 
 #include <SFML/Graphics.hpp>
-#include "UNO_Game.h"
+#include "backend.h"
 #include <string>
 #include <algorithm>
 
@@ -108,8 +108,8 @@ int main()
 
     // ---- Font --------------------------------------------------
     sf::Font font;
-    if (!font.openFromFile("arial.ttf"))
-        if (!font.openFromFile("C:/Windows/Fonts/arial.ttf"))
+    if (!font.openFromFile("D:\\SFML-3.0.2\\arial.ttf"))
+        if (!font.openFromFile("D:\\SFML-3.0.2\\arial.ttf"))
             return -1;
 
     // ---- Game manager (singleton) ------------------------------
@@ -221,7 +221,7 @@ int main()
 
                 // Hand card clicks
                 if (phase == TurnPhase::CHOOSE_ACTION ||
-                    phase == TurnPhase::PLAY_WILD_CARD)
+                    phase == TurnPhase::Play_Choosen_Card)
                 {
                     // Replicate the same layout logic used in the draw section
                     float cw = 75.f, gap = 6.f;
@@ -603,8 +603,8 @@ int main()
                 }
             }
 
-            // PLAY_WILD_CARD: colour hint
-            if (phase == TurnPhase::PLAY_WILD_CARD)
+            // Play_Choosen_Card: colour hint
+            if (phase == TurnPhase::Play_Choosen_Card)
             {
                 std::string hint = "Play a  " +
                     colorToString(gm->getPendingWildColor()) +
